@@ -17,7 +17,7 @@ defaults:
     shell: 'bash'
 
 jobs:
-  analyze:
+  review:
     runs-on: 'ubuntu-latest'
     timeout-minutes: 7
     permissions:
@@ -236,7 +236,7 @@ jobs:
 
   comment:
     runs-on: 'ubuntu-latest'
-    needs: analyze
+    needs: review
     permissions:
       issues: 'write'
       pull-requests: 'write'
@@ -251,7 +251,7 @@ jobs:
               issue_number: context.issue.number,
             });
             const botComment = comments.find(comment => comment.user.login === 'github-actions[bot]');
-            const body = `${{ needs.analyze.outputs.run_result }}`;
+            const body = `${{ needs.review.outputs.run_result }}`;
             if (botComment) {
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,
