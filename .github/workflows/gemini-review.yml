@@ -251,20 +251,33 @@ jobs:
               issue_number: context.issue.number,
             });
             const botComment = comments.find(comment => comment.user.login === 'github-actions[bot]');
-            const body = `${{ needs.review.outputs.run_result }}`;
+
+            const bodies = [];
+            if ('${{ needs.review.result }}' === 'success') {
+              bodies.push('${{ needs.review.outputs.run_result }}');
+            }
+
+            const pr_failed = bodies.length === 0;
+            let final_body;
+            if (pr_failed) {
+              final_body = 'I have reported the error and cannot proceed without a valid pull request. I will wait for further instructions.';
+            } else {
+              final_body = bodies.join('\n\n---\n\n');
+            }
+
             if (botComment) {
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 comment_id: botComment.id,
-                body: body,
+                body: final_body,
               });
             } else {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
-                body: body,
+                body: final_body,
               });
             }
           github-token: ${{ secrets.GITHUB_TOKEN }}
