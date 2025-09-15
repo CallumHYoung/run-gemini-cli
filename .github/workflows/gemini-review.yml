@@ -241,77 +241,30 @@ jobs:
       issues: 'write'
       pull-requests: 'write'
     steps:
-      - name: 'Post review comments'
+      - name: 'Post comment'
         uses: 'actions/github-script@main'
         with:
-          github-token: '${{ secrets.GITHUB_TOKEN }}'
           script: |
-            const output = `${{ needs.review.outputs.run_result }}`;
-            const { owner, repo, number } = context.issue;
-
-            const comments = [];
-            const summary_regex = /## 📋 Review Summary([\s\S]*)/;
-            const summary_match = output.match(summary_regex);
-            const summary = summary_match ? summary_match[0] : "No summary provided.";
-
-            const comment_regex = /### (🔴|🟠|🟡|🟢) File: `([^`]+)` Line: (\d+)\n\n([\s\S]*?)(?=\n### |## 📋 Review Summary|$)/g;
-            let match;
-            while ((match = comment_regex.exec(output)) !== null) {
-              const [_, severity, path, line, body] = match;
-              const suggestion_regex = /```suggestion\n([\s\S]*?)```/;
-              const suggestion_match = body.match(suggestion_regex);
-              let comment_body = body;
-              if (suggestion_match) {
-                comment_body = body.replace(suggestion_regex, '').trim();
-              }
-
-              comments.push({
-                path: path,
-                line: parseInt(line),
-                body: `${severity} ${comment_body}`,
-                suggestion: suggestion_match ? suggestion_match[1] : null,
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const botComment = comments.find(comment => comment.user.login === 'github-actions[bot]');
+            const body = `${{ needs.review.outputs.run_result }}`;
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body,
               });
             }
-
-            if (comments.length === 0) {
-              console.log("No comments to post.");
-              return;
-            }
-
-            const { data: review } = await github.rest.pulls.createReview({
-              owner,
-              repo,
-              pull_number: number,
-              event: 'COMMENT',
-              body: summary,
-            });
-
-            for (const comment of comments) {
-              const { path, line, body, suggestion } = comment;
-              let review_comment_body = body;
-              if (suggestion) {
-                review_comment_body += `\n\
-\
-```suggestion\
-${suggestion}\
-```\n`;
-              }
-              await github.rest.pulls.createReviewComment({
-                owner,
-                repo,
-                pull_number: number,
-                body: review_comment_body,
-                path: path,
-                line: line,
-                review_id: review.id,
-              });
-            }
-
-            await github.rest.pulls.submitReview({
-              owner,
-              repo,
-              pull_number: number,
-              review_id: review.id,
-              event: 'COMMENT',
-              body: summary,
-            });
+          github-token: ${{ secrets.GITHUB_TOKEN }}
