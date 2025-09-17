@@ -79,9 +79,6 @@ outputs:
   error:
     description: 'The error output from the Gemini CLI execution, if any.'
     value: '${{ steps.gemini_run.outputs.gemini_errors }}'
-  run_result:
-    description: 'The result from the Gemini CLI execution.'
-    value: '${{ steps.gemini_run.outputs.gemini_response }}'
 
 runs:
   using: 'composite'
