@@ -157,7 +157,7 @@ runs:
         if [[ "${{ inputs.enable_security_analysis }}" == "true" ]]; then
           echo "Installing Gemini Security Extension"
           PAT=${{ inputs.pat }}
-          gemini extensions install --source https://QuanZhang-William:${PAT}@github.com/QuanZhang-William/gemini-cli-security.git
+          gemini extensions install --source https://CallumHYoung@github.com/CallumHYoung/gemini-cli-security.git
         fi
 
     - name: 'Run Gemini CLI'
