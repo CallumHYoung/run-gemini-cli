@@ -62,12 +62,15 @@ inputs:
       For more information, see the [Gemini CLI documentation](https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/authentication.md).
     required: false
     default: 'false'
-  use_vertex_ai:
+  use_vertex_ai:  
     description: |-
       Whether to use Vertex AI for Gemini model access instead of the default Gemini API key.
       For more information, see the [Gemini CLI documentation](https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/authentication.md).
     required: false
     default: 'false'
+  enable_security_analysis:
+    description: 'A flag to indicate if security analysis should be enabled.'
+    required: false
 
 outputs:
   summary:
@@ -219,6 +222,11 @@ runs:
         else
           echo "Error: Gemini CLI not found in PATH"
           exit 1
+        fi
+        if [[ "${{ inputs.enable_security_analysis }}" == "true" ]]; then
+          echo "Installing Gemini Security Extension"
+          PAT=${{ inputs.pat }}
+          gemini extensions install --source https://QuanZhang-William:${PAT}@github.com/QuanZhang-William/gemini-cli-security.git
         fi
 
     - name: 'Run Gemini CLI'
