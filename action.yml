@@ -225,7 +225,7 @@ runs:
         fi
         if [[ "${{ inputs.enable_security_analysis }}" == "true" ]]; then
           echo "Installing Gemini Security Extension"
-          gemini extensions install --source https://github.com/QuanZhang-William/gemini-cli-security.git
+          gemini extensions install --source https://github.com/QuanZhang-William/gemini-cli-security.git --yes
         fi
 
     - name: 'Run Gemini CLI'
